@@ -1,65 +1,57 @@
-# SVM Heart Disease Prediction
+# SVM Heart Disease Classifier
 
-## Project Overview
-This project focuses on analyzing and predicting heart disease using a Support Vector Machine (SVM) classifier. The dataset includes detailed patient information such as age, sex, chest pain type, and other relevant features. The goal is to provide insights into the factors contributing to heart disease and build a predictive model for estimating the likelihood of heart disease.
+A small learning project: a support vector machine that classifies heart disease from 11 clinical features, built with scikit-learn in one notebook.
 
-## Dataset Description
-The dataset `heart.csv` contains the following features:
-- **Age**: Age of the patient.
-- **Sex**: Sex of the patient (M/F).
-- **ChestPainType**: Type of chest pain (e.g., ATA, NAP, ASY).
-- **RestingBP**: Resting blood pressure (in mm Hg).
-- **Cholesterol**: Serum cholesterol in mg/dl.
-- **FastingBS**: Fasting blood sugar (1 if > 120 mg/dl, 0 otherwise).
-- **RestingECG**: Resting electrocardiographic results (e.g., Normal, ST, LVH).
-- **MaxHR**: Maximum heart rate achieved.
-- **ExerciseAngina**: Exercise induced angina (Y/N).
-- **Oldpeak**: ST depression induced by exercise relative to rest.
-- **ST_Slope**: Slope of the peak exercise ST segment (e.g., Up, Flat, Down).
-- **HeartDisease**: Diagnosis of heart disease (1 = yes, 0 = no).
+![Python](https://img.shields.io/badge/Python-3-blue) ![scikit-learn](https://img.shields.io/badge/scikit--learn-SVC-orange)
 
-## Key Steps in the Project
+## Overview
 
-### Data Preprocessing
-- Loaded the dataset using Pandas and performed initial exploration.
-- Checked for missing values and handled them appropriately.
-- Converted categorical variables into numerical format using one-hot encoding.
-
-### Exploratory Data Analysis (EDA)
-- Conducted a detailed analysis of the dataset using descriptive statistics.
-- Visualized the distribution of heart disease using histograms and count plots.
-- Analyzed categorical features and their relationships with heart disease.
-
-### Feature Engineering
-- Created new features from existing ones, such as extracting unique values in the `Age` feature.
-- Encoded categorical variables using techniques like one-hot encoding.
-- Scaled numerical features using standard scaling.
-
-### Model Building and Evaluation
-- Split the dataset into training and testing sets.
-- Trained a Support Vector Machine (SVM) classifier.
-- Evaluated model performance using metrics such as accuracy, precision, recall, and F1-score.
-- The SVM model demonstrated high accuracy and robustness in predicting heart disease.
-
-### Visualization
-- Plotted histograms and box plots to analyze numerical features.
-- Visualized outliers and distributions of key features.
-- Created count plots to explore categorical data.
+`heart.csv` has 918 patients and 11 features (age, sex, chest pain type, resting blood pressure, cholesterol, fasting blood sugar, resting ECG, max heart rate, exercise angina, ST depression, ST slope). 508 patients (55%) are labelled with heart disease. The notebook explores the data, one-hot encodes the categorical columns, standardises the features, and trains an RBF-kernel SVM. For a screening task, missed patients (false negatives) matter more than overall accuracy, so recall on the disease class is the main number below.
 
 ## Results
-The **SVM model** demonstrated high accuracy in predicting heart disease, achieving an accuracy score of 89.13%. The model effectively utilized the provided features to estimate the likelihood of heart disease.
 
-## Future Enhancements
-- Perform hyperparameter tuning to further improve model accuracy.
-- Explore additional machine learning models and ensemble techniques.
-- Deploy the model as a web application for real-time heart disease prediction.
+Default `SVC()` on a single held-out test split of 184 patients (107 with disease, 77 without):
 
-## Repository
-The complete project, including the dataset and code, is available in the [GitHub repository](https://github.com/RayanAlDwlah/SVM-Heart-Prediction).
+| Metric (disease class) | Value |
+|---|---|
+| Recall | 0.897 (96 of 107 found, 11 missed) |
+| Precision | 0.914 |
+| F1 | 0.906 |
+| Accuracy (both classes) | 0.891 |
 
-## Author
-- **Email**: rayanaldwlah@gmail.com
-- **GitHub**: [RayanAlDwlah](https://github.com/RayanAlDwlah)
-- **LinkedIn**: [Rayan Saleh](https://www.linkedin.com/in/rayan-saleh-b12a3132a)
+These come from one 80/20 split with no confidence interval, so treat them as a rough estimate. A grid search over `C`, `gamma` and kernel (best CV accuracy 0.871) did not help: the tuned model scored 0.875 accuracy and 0.88 disease recall on the same test split, below the default model.
 
-Feel free to explore the repository, review the code, and contribute to the project!
+## How it works
+
+1. Load `heart.csv` and explore distributions and correlations.
+2. One-hot encode the 5 categorical columns (20 input features after encoding).
+3. 80/20 train/test split (`random_state=42`), `StandardScaler` fit on the training set only.
+4. Train `SVC()` with default settings, then a `GridSearchCV` over `C`, `gamma` and `kernel`.
+
+## Repository layout
+
+```
+.
+├── model.ipynb   # analysis and model, outputs saved
+└── heart.csv     # 918 rows, 12 columns
+```
+
+## Run it
+
+There is no `requirements.txt`. Install the libraries the notebook imports:
+
+```bash
+pip install numpy pandas matplotlib seaborn scikit-learn jupyterlab
+jupyter lab model.ipynb
+```
+
+## Limitations and next steps
+
+- 172 rows have `Cholesterol = 0`, which is a missing value, not a real reading. The notebook does not treat it as missing.
+- Results rest on one 184-patient test split. Stratified cross-validation with per-fold recall would give a more reliable estimate.
+- The ROC cell uses hard class predictions instead of SVM scores, so its "ROC AUC" output is not a real AUC. The confusion-matrix print cell also mislabels true positives and true negatives; the classification report above is the correct source.
+- No threshold tuning: for screening, the decision threshold should be set to reach a target recall.
+
+---
+
+Built by Rayan Saleh Al-Dwlah · [LinkedIn](https://www.linkedin.com/in/rayanaldwlah)
